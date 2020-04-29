@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NorthwindAspNetCore.Data;
 
 namespace NorthwindAspNetCore
 {
@@ -20,6 +22,9 @@ namespace NorthwindAspNetCore
         {
             services.AddRazorPages();
             services.AddControllersWithViews();
+
+            services.AddDbContext<NorthwindContext>(options =>
+                options.UseSqlite(Configuration.GetConnectionString("Default")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

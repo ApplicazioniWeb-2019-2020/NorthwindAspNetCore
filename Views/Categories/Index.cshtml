@@ -4,38 +4,78 @@
     ViewData["Title"] = "Categories";
 }
 
+@section Styles {
+    <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
+    <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
+}
+
+@section Scripts {
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
+    <script>
+
+        $(document).ready(function () {
+            $("#jsGrid").jsGrid({
+                width: "100%",
+
+                inserting: true,
+                editing: true,
+                sorting: true,
+                paging: true,
+                filtering: true,
+
+                autoload: true,
+                pageLoading: true,
+                pageSize: 10,
+
+                controller: {
+                    loadData: function (filter) {
+                        return $.ajax({
+                            type: "GET",
+                            url: "/api/categories",
+                            data: filter,
+                            contentType: "application/json"
+                        });
+                    },
+                    insertItem: function (item) {
+                        return $.ajax({
+                            type: "POST",
+                            url: "/api/categories",
+                            data: JSON.stringify(item),
+                            contentType: "application/json",
+                            dataType: "json"
+                        });
+                    },
+                    updateItem: function (item) {
+                        return $.ajax({
+                            type: "PUT",
+                            url: "/api/categories/" + item.id,
+                            data: JSON.stringify(item),
+                            contentType: "application/json",
+                            dataType: "json"
+                        });
+                    },
+                    deleteItem: function (item) {
+                        return $.ajax({
+                            type: "DELETE",
+                            url: "/api/categories/" + item.id,
+                            contentType: "application/json",
+                            dataType: "json"
+                        });
+                    }
+                },
+
+                fields: [
+                    { name: "id", type: "number", width: 50, title: "Id" },
+                    { name: "name", type: "text", width: 150, validate: "required", title: "Name" },
+                    { name: "description", type: "text", width: 150, validate: "required", title: "Description" },
+                    { type: "control" }
+                ]
+            });
+        })
+
+    </script>
+}
+
 <h1>Categories</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<div id="jsGrid"></div>

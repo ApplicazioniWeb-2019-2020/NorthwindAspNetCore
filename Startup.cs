@@ -25,7 +25,10 @@ namespace NorthwindAspNetCore
             services.AddControllersWithViews();
 
             services.AddDbContext<NorthwindContext>(options =>
-                options.UseSqlite(Configuration.GetConnectionString("Default")));
+            {
+                options.UseSqlite(Configuration.GetConnectionString("Default"));
+                options.EnableSensitiveDataLogging();
+            });
 
             services.AddSwaggerGen(c =>
             {

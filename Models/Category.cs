@@ -1,6 +1,6 @@
 ﻿namespace NorthwindAspNetCore.Models
 {
-    public class Category
+    public class Category : IHasId
     {
         public int Id { get; set; }
 

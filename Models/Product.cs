@@ -1,6 +1,6 @@
 ﻿namespace NorthwindAspNetCore.Models
 {
-    public class Product
+    public class Product : IHasId
     {
         public int Id { get; set; }
 

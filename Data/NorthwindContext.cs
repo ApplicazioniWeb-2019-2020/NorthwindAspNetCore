@@ -1,9 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using NorthwindAspNetCore.Models;
 
 namespace NorthwindAspNetCore.Data
 {
-    public class NorthwindContext : DbContext
+    public class NorthwindContext : IdentityDbContext<SiteUser>
     {
         public NorthwindContext(DbContextOptions<NorthwindContext> options)
             : base(options)
@@ -32,6 +33,8 @@ namespace NorthwindAspNetCore.Data
             modelBuilder.Entity<Product>().Property(p => p.Name).HasColumnName("ProductName");
 
             modelBuilder.Entity<Supplier>().ToTable("Supplier");
+
+            base.OnModelCreating(modelBuilder);
         }
     }
 }

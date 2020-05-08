@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using NorthwindAspNetCore.Data;
+using NorthwindAspNetCore.Models;
 
 namespace NorthwindAspNetCore
 {
@@ -34,6 +37,14 @@ namespace NorthwindAspNetCore
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Northwind API", Version = "v1" });
             });
+
+            services.AddIdentity<SiteUser, IdentityRole>(config =>
+            {
+                config.User.RequireUniqueEmail = true;
+            })
+            .AddEntityFrameworkStores<NorthwindContext>();
+
+            services.AddScoped<NorthwindDataSeed>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -61,9 +72,9 @@ namespace NorthwindAspNetCore
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Northwind API V1");
             });
 
+            app.UseAuthentication();
             app.UseRouting();
-
-            //app.UseAuthorization();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
@@ -73,6 +84,10 @@ namespace NorthwindAspNetCore
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            using var scope = app.ApplicationServices.CreateScope();
+            var seed = scope.ServiceProvider.GetService<NorthwindDataSeed>();
+            seed.SeedAsync().Wait();
         }
     }
 }

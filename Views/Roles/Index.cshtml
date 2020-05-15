@@ -1,0 +1,79 @@
+﻿@model IEnumerable<Microsoft.AspNetCore.Identity.IdentityRole>
+
+@{
+    ViewData["Title"] = "Roles";
+}
+
+@section Styles {
+    <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
+    <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
+}
+
+@section Scripts {
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
+    <script>
+
+        $(document).ready(function () {
+            $("#jsGrid").jsGrid({
+                width: "100%",
+
+                inserting: true,
+                editing: true,
+                sorting: true,
+                paging: true,
+                filtering: true,
+
+                autoload: true,
+                pageLoading: true,
+
+                controller: {
+                    loadData: function (filter) {
+                        return $.ajax({
+                            type: "GET",
+                            url: "/api/roles",
+                            data: filter,
+                            contentType: "application/json"
+                        });
+                    },
+                    insertItem: function (item) {
+                        return $.ajax({
+                            type: "POST",
+                            url: "/api/roles",
+                            data: JSON.stringify(item),
+                            contentType: "application/json",
+                            dataType: "json"
+                        });
+                    },
+                    updateItem: function (item) {
+                        return $.ajax({
+                            type: "PUT",
+                            url: "/api/roles/" + item.id,
+                            data: JSON.stringify(item),
+                            contentType: "application/json",
+                            dataType: "json"
+                        });
+                    },
+                    deleteItem: function (item) {
+                        return $.ajax({
+                            type: "DELETE",
+                            url: "/api/roles/" + item.id,
+                            contentType: "application/json",
+                            dataType: "json"
+                        });
+                    }
+                },
+
+                fields: [
+                    { name: "id", type: "text", title: "Id", visible: false },
+                    { name: "name", type: "text", validate: "required", title: "Name" },
+                    { type: "control" }
+                ]
+            });
+        })
+
+    </script>
+}
+
+<h1>Roles</h1>
+
+<div id="jsGrid"></div>

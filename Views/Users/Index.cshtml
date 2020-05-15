@@ -1,0 +1,129 @@
+﻿@model IEnumerable<SiteUser>
+
+@{
+    ViewData["Title"] = "Users";
+}
+
+@section Styles {
+    <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
+    <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
+}
+
+@section Scripts {
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
+    <script>
+
+        $(document).ready(function () {
+            var PasswordField = function (config) {
+                jsGrid.Field.call(this, config);
+            };
+
+            PasswordField.prototype = new jsGrid.Field({
+                sorter: function (pass1, pass2) {
+
+                    if (pass1 < pass2) {
+                        return -1;
+                    } else if (pass1 > pass2) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                },
+
+                itemTemplate: function (value) {
+                    return "<input type='password' value='" + value + "'  style='border:none;background:transparent;' >";
+                },
+
+                insertTemplate: function (value) {
+                    return this._insertPicker = $("<input type='password'>");
+
+                },
+
+                editTemplate: function (value) {
+                    return this._editPicker = $("<input type='password' value='" + value + "'  >");
+
+                },
+
+                insertValue: function () {
+                    return this._insertPicker.val();
+
+                },
+
+                editValue: function () {
+                    return this._editPicker.val();
+
+                }
+            });
+
+            jsGrid.fields.passwordField = PasswordField;
+
+            $("#jsGrid").jsGrid({
+                width: "100%",
+
+                inserting: true,
+                editing: true,
+                sorting: true,
+                paging: true,
+                filtering: true,
+
+                autoload: true,
+                pageLoading: true,
+
+                controller: {
+                    loadData: function (filter) {
+                        return $.ajax({
+                            type: "GET",
+                            url: "/api/users",
+                            data: filter,
+                            contentType: "application/json"
+                        });
+                    },
+                    insertItem: function (item) {
+                        return $.ajax({
+                            type: "POST",
+                            url: "/api/users",
+                            data: JSON.stringify(item),
+                            contentType: "application/json",
+                            dataType: "json"
+                        });
+                    },
+                    updateItem: function (item) {
+                        return $.ajax({
+                            type: "PUT",
+                            url: "/api/users/" + item.id,
+                            data: JSON.stringify(item),
+                            contentType: "application/json",
+                            dataType: "json"
+                        });
+                    },
+                    deleteItem: function (item) {
+                        return $.ajax({
+                            type: "DELETE",
+                            url: "/api/users/" + item.id,
+                            contentType: "application/json",
+                            dataType: "json"
+                        });
+                    }
+                },
+
+                onError: function (grid, args) {
+                    $('.toast').toast('show')
+                },
+
+                fields: [
+                    { name: "id", type: "text", title: "Id", visible: false },
+                    { name: "userName", type: "text", validate: "required", title: "UserName" },
+                    { name: "email", type: "text", validate: "required", title: "Email" },
+                    { name: "phoneNumber", type: "text", title: "PhoneNumber" },
+                    { name: "password", type: "passwordField", title: "Password", filtering: false },
+                    { type: "control" }
+                ]
+            });
+        })
+
+    </script>
+}
+
+<h1>Users</h1>
+
+<div id="jsGrid"></div>

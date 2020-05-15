@@ -87,7 +87,7 @@ namespace NorthwindAspNetCore.Controllers.Api
             Table.Add(resource);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetProduct", new { id = resource.Id }, resource);
+            return CreatedAtAction("GetSingle", new { id = resource.Id }, resource);
         }
 
         // DELETE: api/<Resource>/5

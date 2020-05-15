@@ -33,6 +33,12 @@ namespace NorthwindAspNetCore.Data
                 var result = await _userManager.CreateAsync(user, password);
                 if (!result.Succeeded) throw new InvalidOperationException("Cannot create default user");
             }
+
+            if (!await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                var result = await _userManager.AddToRoleAsync(user, "Admin");
+                if (!result.Succeeded) throw new InvalidOperationException("Cannot add role Admin to default user");
+            }
         }
     }
 }

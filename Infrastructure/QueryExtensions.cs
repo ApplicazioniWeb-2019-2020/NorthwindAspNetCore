@@ -10,13 +10,13 @@ namespace NorthwindAspNetCore.Infrastructure
 {
     public static class QueryExtensions
     {
-        public static async Task<QueryResponse<TResource>> ToQueryResponse<TRequest, TResource>(this DbSet<TResource> dbSet, TRequest request)
+        public static async Task<QueryResponse<TResource>> ToQueryResponse<TRequest, TResource>(this IQueryable<TResource> dbSet, TRequest request)
             where TRequest : Query
             where TResource : class
         {
             var itemsCount = await dbSet.CountAsync();
 
-            var query = dbSet.AsQueryable();
+            var query = dbSet;
 
             if (request != null)
             {

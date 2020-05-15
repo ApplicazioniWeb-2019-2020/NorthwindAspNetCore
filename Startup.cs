@@ -42,7 +42,8 @@ namespace NorthwindAspNetCore
             {
                 config.User.RequireUniqueEmail = true;
             })
-            .AddEntityFrameworkStores<NorthwindContext>();
+            .AddEntityFrameworkStores<NorthwindContext>()
+            .AddDefaultTokenProviders();
 
             services.AddScoped<NorthwindDataSeed>();
         }

@@ -16,49 +16,6 @@
     <script>
 
         $(document).ready(function () {
-            var PasswordField = function (config) {
-                jsGrid.Field.call(this, config);
-            };
-
-            PasswordField.prototype = new jsGrid.Field({
-                sorter: function (pass1, pass2) {
-
-                    if (pass1 < pass2) {
-                        return -1;
-                    } else if (pass1 > pass2) {
-                        return 1;
-                    } else {
-                        return 0;
-                    }
-                },
-
-                itemTemplate: function (value) {
-                    return "<input type='password' value='" + value + "'  style='border:none;background:transparent;' >";
-                },
-
-                insertTemplate: function (value) {
-                    return this._insertPicker = $("<input type='password'>");
-
-                },
-
-                editTemplate: function (value) {
-                    return this._editPicker = $("<input type='password' value='" + value + "'  >");
-
-                },
-
-                insertValue: function () {
-                    return this._insertPicker.val();
-
-                },
-
-                editValue: function () {
-                    return this._editPicker.val();
-
-                }
-            });
-
-            jsGrid.fields.passwordField = PasswordField;
-
             $("#jsGrid").jsGrid({
                 width: "100%",
 

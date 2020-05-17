@@ -120,6 +120,15 @@ namespace NorthwindAspNetCore.Controllers.Api
             foreach (var user in users ?? Enumerable.Empty<SiteUser>())
             {
                 var roles = await _userManager.GetRolesAsync(user);
+
+                //var userViewModel = new SiteUserViewModel
+                //{
+                //    Id = user.Id,
+                //    UserName = user.UserName,
+                //    FirstName = user.FirstName,
+                //    LastName = user.LastName,
+                //};
+
                 var userViewModel = _mapper.Map<SiteUser, SiteUserViewModel>(user);
                 userViewModel.Roles = string.Join(',', roles);
 

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace NorthwindAspNetCore.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class RolesController : Controller
     {
         public IActionResult Index()

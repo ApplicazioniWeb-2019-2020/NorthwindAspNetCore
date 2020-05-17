@@ -1,14 +1,15 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using NorthwindAspNetCore.Data;
 using NorthwindAspNetCore.Models;
+using System.Reflection;
 
 namespace NorthwindAspNetCore
 {
@@ -46,6 +47,8 @@ namespace NorthwindAspNetCore
             .AddDefaultTokenProviders();
 
             services.AddScoped<NorthwindDataSeed>();
+
+            services.AddAutoMapper(Assembly.GetExecutingAssembly());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

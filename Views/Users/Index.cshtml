@@ -7,10 +7,12 @@
 @section Styles {
     <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
     <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
+    <link type="text/css" rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
 }
 
 @section Scripts {
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
+    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script>
 
         $(document).ready(function () {
@@ -112,12 +114,61 @@
 
                 fields: [
                     { name: "id", type: "text", title: "Id", visible: false },
-                    { name: "userName", type: "text", validate: "required", title: "UserName" },
-                    { name: "email", type: "text", validate: "required", title: "Email" },
-                    { name: "phoneNumber", type: "text", title: "PhoneNumber" },
-                    { name: "password", type: "passwordField", title: "Password", filtering: false },
-                    { type: "control" }
+                    { name: "userName", type: "text", validate: "required", title: "UserName", width: 150 },
+                    { name: "email", type: "text", validate: "required", title: "Email", width: 150 },
+                    { name: "firstName", type: "text", title: "First Name" },
+                    { name: "lastName", type: "text", title: "Last Name" },
+                    //{ name: "password", type: "passwordField", title: "Password", filtering: false },
+                    { name: "roles", type: "text", title: "Roles", filtering: false, width: 100 },
+                    {
+                        type: "control",
+                        width: 200,
+                        itemTemplate: function (value, item) {
+                            var $result = jsGrid.fields.control.prototype.itemTemplate.apply(this, arguments);
+
+                            var $customButton = $("<button>")
+                                .addClass("btn btn-success btn-sm")
+                                .text("Password")
+                                .click(function (e) {
+                                    window.userId = item.id;
+                                    dialog.dialog("open");
+                                    e.stopPropagation();
+                                });
+
+                            return $result.add($customButton);
+                        }
+                    }
                 ]
+            });
+
+            dialog = $("#dialog-form").dialog({
+                autoOpen: false,
+                width: 400,
+                height: 250,
+                modal: true,
+                buttons: {
+                    "Ok": function () {
+                        $.ajax({
+                            type: "POST",
+                            url: "/api/users/" + window.userId + "/changepassword",
+                            data: JSON.stringify({ password: $("#password").val() }),
+                            contentType: "application/json",
+                            dataType: "json"  
+                        })
+                        .done(function () {
+                            alert("Password changed");
+                        })
+                        .fail(function () {
+                            alert("Error changing password");
+                        })
+                        .always(function () {
+                            dialog.dialog("close");
+                        });
+                    },
+                    Cancel: function () {
+                        dialog.dialog("close");
+                    }
+                }
             });
         })
 
@@ -127,3 +178,12 @@
 <h1>Users</h1>
 
 <div id="jsGrid"></div>
+
+<div id="dialog-form" title="Set User Password">
+    <form asp-action="Login">
+        <div class="form-group">
+            <label class="control-label">Password</label>
+            <input type="password" class="form-control" id="password" />
+        </div>
+    </form>
+</div>

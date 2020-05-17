@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Internal;
 using NorthwindAspNetCore.Infrastructure;
 using NorthwindAspNetCore.Models;
 using NorthwindAspNetCore.ViewModels;
@@ -14,99 +18,112 @@ namespace NorthwindAspNetCore.Controllers.Api
     [Authorize(Roles = "Admin")]
     public class UsersController : ControllerBase
     {
-        private readonly UserManager<SiteUser> _userManager;
+        static readonly object Empty = new object();
 
-        public UsersController(UserManager<SiteUser> userManager)
+        private readonly UserManager<SiteUser> _userManager;
+        private readonly IMapper _mapper;
+
+        public UsersController(UserManager<SiteUser> userManager, IMapper mapper)
         {
             _userManager = userManager;
+            _mapper = mapper;
         }
 
         [HttpGet]
-        public async Task<ActionResult<QueryResponse<SiteUser>>> Get([FromQuery] SiteUserQuery query = null)
+        public async Task<ActionResult<QueryResponse<SiteUserViewModel>>> Get([FromQuery] SiteUserQuery query = null)
         {
-            return await _userManager.Users.ToQueryResponse(query);
-        }
+            var users = await _userManager.Users.ToQueryResponse(query);
+            var userWithRoles = await GetRolesAsync(users.Data).ToListAsync();
 
-        // POST: api/Roles
-        [HttpPost]
-        public async Task<ActionResult<SiteUser>> Post([FromBody] SiteUserViewModel user)
-        {
-            var siteUser = new SiteUser
+            return new QueryResponse<SiteUserViewModel>
             {
-                Id = Guid.NewGuid().ToString(),
-                UserName = user.UserName,
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber,
+                ItemsCount = users.ItemsCount,
+                Data = userWithRoles,
             };
-
-            var result = await _userManager.CreateAsync(siteUser);
-            if (result.Succeeded)
-            {
-                result = await _userManager.ChangePasswordAsync(siteUser, null, user.Password);
-
-                if (result.Succeeded)
-                {
-                    return siteUser;
-                }
-                else
-                {
-                    throw Error.Identity(result.Errors);
-                }
-            }
-            else
-            {
-                throw Error.Identity(result.Errors);
-            }
         }
 
-        // PUT: api/Roles/5
-        [HttpPut("{id}")]
-        public async Task<ActionResult<SiteUser>> Put(string id, [FromBody] SiteUserViewModel user)
+        [HttpPost]
+        public async Task<ActionResult<SiteUserViewModel>> Post([FromBody] SiteUserViewModel userViewModel)
         {
-            var siteUser = await _userManager.FindByIdAsync(id);
-            if (siteUser == null) return NotFound();
+            // E' necessario assegnare un ID al nuovo utente. L'ID è un GUID (https://it.wikipedia.org/wiki/GUID).
+            userViewModel.Id = Guid.NewGuid().ToString();
 
-            siteUser.UserName = user.UserName;
-            siteUser.Email = user.Email;
-            siteUser.PhoneNumber = user.PhoneNumber;
+            // Converto il tipo da SiteUserViewModel a SiteUser.
+            var user = _mapper.Map<SiteUserViewModel, SiteUser>(userViewModel);
 
-            var result = await _userManager.UpdateAsync(siteUser);
+            await TryAsync(() => _userManager.CreateAsync(user));
+            await AssignRolesAsync(user, userViewModel.Roles);
 
-            if (result.Succeeded)
-            {
-                var token = await _userManager.GeneratePasswordResetTokenAsync(siteUser);
-                result = await _userManager.ResetPasswordAsync(siteUser, token, user.Password);
-
-                if (result.Succeeded)
-                {
-                    return siteUser;
-                }
-                else
-                {
-                    throw Error.Identity(result.Errors);
-                }
-            }
-            else
-            {
-                throw Error.Identity(result.Errors);
-            }
+            return userViewModel;
         }
 
-        // DELETE: api/ApiWithActions/5
-        [HttpDelete("{id}")]
-        public async Task<ActionResult<SiteUser>> Delete(string id)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<SiteUserViewModel>> Put(string id, [FromBody] SiteUserViewModel userViewModel)
         {
             var user = await _userManager.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            var result = await _userManager.DeleteAsync(user);
-            if (result.Succeeded)
+            user = _mapper.Map(userViewModel, user);
+
+            await TryAsync(() => _userManager.UpdateAsync(user));
+            await AssignRolesAsync(user, userViewModel.Roles);
+
+            return userViewModel;
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<SiteUserViewModel>> Delete(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            await TryAsync(() => _userManager.DeleteAsync(user));
+
+            return _mapper.Map<SiteUser, SiteUserViewModel>(user);
+        }
+
+        [HttpPost("{id}/changepassword")]
+        public async Task<ActionResult<object>> ChangePassword(string id, [FromBody] ChangePasswordViewModel model)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            await TryAsync(() => _userManager.ResetPasswordAsync(user, token, model.Password));
+
+            return Empty;
+        }
+
+        async Task AssignRolesAsync(SiteUser user, string roles)
+        {
+            var userRoles = await _userManager.GetRolesAsync(user);
+            if (userRoles != null && userRoles.Any())
             {
-                return user;
+                await TryAsync(() => _userManager.RemoveFromRolesAsync(user, userRoles));
             }
-            else
+
+            userRoles = roles.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            if (userRoles != null && userRoles.Any())
             {
-                throw Error.Identity(result.Errors);
+                await TryAsync(() => _userManager.AddToRolesAsync(user, userRoles));
+            }
+        }
+
+        async Task TryAsync(Func<Task<IdentityResult>> func)
+        {
+            var result = await func();
+            if (!result.Succeeded) throw Error.Identity(result.Errors);
+        }
+
+        async IAsyncEnumerable<SiteUserViewModel> GetRolesAsync(IEnumerable<SiteUser> users)
+        {
+            foreach (var user in users ?? Enumerable.Empty<SiteUser>())
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var userViewModel = _mapper.Map<SiteUser, SiteUserViewModel>(user);
+                userViewModel.Roles = string.Join(',', roles);
+
+                yield return userViewModel;
             }
         }
     }

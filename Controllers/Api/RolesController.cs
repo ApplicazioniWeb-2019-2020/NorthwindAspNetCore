@@ -25,7 +25,6 @@ namespace NorthwindAspNetCore.Controllers.Api
             return await _roleManager.Roles.ToQueryResponse(query);
         }
 
-        // POST: api/Roles
         [HttpPost]
         public async Task<ActionResult<IdentityRole>> Post([FromBody] IdentityRole role)
         {
@@ -40,7 +39,6 @@ namespace NorthwindAspNetCore.Controllers.Api
             }
         }
 
-        // PUT: api/Roles/5
         [HttpPut("{id}")]
         public async Task<ActionResult<IdentityRole>> Put(string id, [FromBody] IdentityRole role)
         {
@@ -60,7 +58,6 @@ namespace NorthwindAspNetCore.Controllers.Api
             }
         }
 
-        // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
         public async Task<ActionResult<IdentityRole>> Delete(string id)
         {

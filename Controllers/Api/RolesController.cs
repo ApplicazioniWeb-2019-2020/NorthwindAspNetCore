@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,7 @@ namespace NorthwindAspNetCore.Controllers.Api
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class RolesController : ControllerBase
     {
         private readonly RoleManager<IdentityRole> _roleManager;

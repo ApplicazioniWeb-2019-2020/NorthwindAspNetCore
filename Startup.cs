@@ -6,10 +6,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NorthwindAspNetCore.Data;
 using NorthwindAspNetCore.Models;
 using System.Reflection;
+using System.Text;
 
 namespace NorthwindAspNetCore
 {
@@ -45,6 +47,18 @@ namespace NorthwindAspNetCore
             })
             .AddEntityFrameworkStores<NorthwindContext>()
             .AddDefaultTokenProviders();
+
+            services.AddAuthentication()
+                .AddCookie()
+                .AddJwtBearer(config =>
+                {
+                    config.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Tokens:Key"])),
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                    };
+                });
 
             services.AddScoped<NorthwindDataSeed>();
 
